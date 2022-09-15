@@ -20,3 +20,11 @@ impl From<std::io::Error> for RTopError {
         }
     }
 }
+
+impl From<crossterm::ErrorKind > for RTopError {
+    fn from(err: crossterm::ErrorKind) -> Self {
+        RTopError {
+            err_msg: err.to_string(),
+        }
+    }
+}
