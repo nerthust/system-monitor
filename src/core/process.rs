@@ -6,7 +6,6 @@ use sysinfo::ProcessStatus;
 use crate::core::error::RTopError;
 
 pub type Pid = libc::pid_t;
-pub type Pri = libc::priority_t;
 pub type Uid = libc::uid_t;
 
 #[derive(Debug, Clone, Default)]
@@ -45,10 +44,10 @@ pub struct ProcData {
     pub state: (String, char),
 
     // Process' user ID.
-    pub uid: Uid,
+    pub uid: Option<Uid>,
 
     // Process' priority
-    pub priority: Pri,
+    pub priority: i64,
 }
 
 impl ProcData {
@@ -73,7 +72,7 @@ impl ProcData {
             parent_pid: stat.ppid,
             cpu_usage_percent,
             mem_usage_percent: 0.0,
-            priority: 0,
+            priority: stat.priority,
             total_disk_read_bytes: 0,
             total_disk_write_bytes: 0,
             total_net_received_bytes: 0,
@@ -81,7 +80,7 @@ impl ProcData {
             name: name,
             command: command,
             state: (ProcessStatus::from(stat.state).to_string(), stat.state),
-            uid: 0,
+            uid: proc.uid().ok(),
         };
 
         (data, new_process_time)
