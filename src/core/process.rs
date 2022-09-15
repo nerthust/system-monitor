@@ -23,10 +23,10 @@ pub struct ProcData {
     pub mem_usage_percent: f64,
 
     // Total number of bytes read by the process on disk.
-    pub total_disk_read_bytes: u64,
+    pub total_disk_read_bytes: Option<u64>,
 
     // Total number of bytes written by the process on disk.
-    pub total_disk_write_bytes: u64,
+    pub total_disk_write_bytes: Option<u64>,
 
     // Total number of bytes received by the process over the network.
     pub total_net_received_bytes: u64,
@@ -67,14 +67,22 @@ impl ProcData {
             prev_cpu_time,
             use_current_cpu_total,
         );
+        let mut total_disk_read_bytes = None;
+        let mut total_disk_write_bytes = None;
+
+        if let Ok(io) = proc.io() {
+            total_disk_read_bytes = Some(io.read_bytes);
+            total_disk_write_bytes = Some(io.write_bytes);
+        }
+
         let data = ProcData {
             pid: proc.pid,
             parent_pid: stat.ppid,
             cpu_usage_percent,
             mem_usage_percent: 0.0,
             priority: stat.priority,
-            total_disk_read_bytes: 0,
-            total_disk_write_bytes: 0,
+            total_disk_read_bytes,
+            total_disk_write_bytes,
             total_net_received_bytes: 0,
             total_net_sent_bytes: 0,
             name: name,

@@ -10,7 +10,7 @@ fn main() {
         let data = sys_data.read_process_data().unwrap();
         data.iter().for_each(|proc| {
             if proc.command.contains("teams") {
-                println!("({:?}, {:?})", proc.name, proc.priority);
+                println!("({:?}, {:?}, {:?})", proc.name, proc.total_disk_read_bytes, proc.total_disk_write_bytes);
             }
         });
 
