@@ -50,3 +50,38 @@ pub struct ProcData {
     // Process' priority
     pub priority: Pri,
 }
+
+
+// Helpers
+const MAX_STAT_NAME_LEN: usize = 15;
+
+fn get_proc_cmd_and_name(proc: &Process, stat: &Stat) -> (String, String) {
+    let (command, name) = {
+        let truncated_name = stat.comm.as_str();
+        if let Ok(cmdline) = proc.cmdline() {
+            if cmdline.is_empty() {
+                return (format!("[{}]", truncated_name), truncated_name.to_string());
+            } else {
+                let name = if truncated_name.len() >= MAX_STAT_NAME_LEN {
+                    if let Some(first_part) = cmdline.first() {
+                        first_part
+                            .rsplit_once('/')
+                            .map(|(_prefix, suffix)| suffix)
+                            .unwrap_or(truncated_name)
+                            .to_string()
+                    } else {
+                        truncated_name.to_string()
+                    }
+                } else {
+                    truncated_name.to_string()
+                };
+
+                return (cmdline.join(" "), name);
+            }
+        } else {
+            (truncated_name.to_string(), truncated_name.to_string())
+        }
+    };
+
+    return (command, name);
+}
