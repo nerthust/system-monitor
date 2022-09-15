@@ -57,6 +57,7 @@ impl ProcData {
         cpu_usage: f64,
         cpu_fraction: f64,
         prev_cpu_time: u64,
+        total_memory_bytes: u64,
         use_current_cpu_total: bool,
     ) -> (Self, u64) {
         let (command, name) = get_proc_cmd_and_name(&proc, &stat);
@@ -75,11 +76,14 @@ impl ProcData {
             total_disk_write_bytes = Some(io.write_bytes);
         }
 
+        let mem_usage_bytes = u64::try_from(stat.rss_bytes().unwrap_or(0)).unwrap_or(0);
+        let mem_usage_percent = mem_usage_bytes as f64 / total_memory_bytes as f64 * 100.0;
+
         let data = ProcData {
             pid: proc.pid,
             parent_pid: stat.ppid,
             cpu_usage_percent,
-            mem_usage_percent: 0.0,
+            mem_usage_percent,
             priority: stat.priority,
             total_disk_read_bytes,
             total_disk_write_bytes,
@@ -100,6 +104,7 @@ pub fn read_process_data(
     prev_non_idle: &mut f64,
     cpu_times: &mut HashMap<Pid, u64>,
     use_current_cpu_total: bool,
+    total_memory_bytes: u64,
 ) -> Result<Vec<ProcData>, RTopError> {
     let mut current_pids = HashSet::new();
     if let Ok((cpu_usage, cpu_percentage)) = cpu_usage_calculation(prev_idle, prev_non_idle) {
@@ -116,6 +121,7 @@ pub fn read_process_data(
                                     cpu_usage,
                                     cpu_percentage,
                                     prev_proc_cpu_time,
+                                    total_memory_bytes,
                                     use_current_cpu_total,
                                 );
                                 cpu_times.insert(pid, new_proc_cpu_time);
