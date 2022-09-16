@@ -2,6 +2,7 @@ use std::{io, cell::RefCell, rc::Rc};
 
 use crossterm::execute;
 use crossterm::terminal::EnterAlternateScreen;
+use crossterm::terminal::LeaveAlternateScreen;
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::core::error::RTopError;
@@ -25,6 +26,7 @@ pub fn start_ui(app: Rc<RefCell<App>>) -> Result<(), RTopError> {
     }
 
     terminal.clear()?;
+    //execute!(stdout, LeaveAlternateScreen)?;
     terminal.show_cursor()?;
     crossterm::terminal::disable_raw_mode()?;
 

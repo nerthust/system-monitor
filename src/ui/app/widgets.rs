@@ -12,25 +12,24 @@ where
     B: Backend,
 {
     let size = rect.size();
-    // TODO check size
-    check_size(&size);
+    //check_size(&size);
     // Vertical layout
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(10)].as_ref())
+        .constraints(
+            [
+                Constraint::Length(4),
+                Constraint::Min(10)
+            ].as_ref()
+        )
         .split(size);
 
     // Title block
     let title = draw_title();
     rect.render_widget(title, chunks[0]);
-    // Body & Help
-    let body_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(0), Constraint::Min(10)].as_ref())
-        .split(chunks[1]);
-
-    let help = draw_process(&size);
-    rect.render_widget(help, body_chunks[1]);
+    // Process block
+    let process = draw_process(&size);
+    rect.render_widget(process, chunks[1]);
 }
 
 fn draw_title<'a>() -> Paragraph<'a> {
@@ -45,14 +44,14 @@ fn draw_title<'a>() -> Paragraph<'a> {
         )
 }
 
-fn check_size(rect: &Rect) {
-    if rect.width < 52 {
-        panic!("Require width >= 52, (got {})", rect.width);
-    }
-    if rect.height < 28 {
-        panic!("Require height >= 28, (got {})", rect.height);
-    }
-}
+//fn check_size(rect: &Rect) {
+//    if rect.width < 52 {
+//        panic!("Require width >= 52, (got {})", rect.width);
+//    }
+//    if rect.height < 28 {
+//        panic!("Require height >= 28, (got {})", rect.height);
+//    }
+//}
 
 fn draw_process(rect: &Rect) -> Table {
     let key_style = Style::default().fg(Color::LightCyan);
@@ -61,8 +60,16 @@ fn draw_process(rect: &Rect) -> Table {
     let mut rows = vec![];
 
     let row = Row::new(vec![
-            Cell::from(Span::styled("puid", key_style)),
-            Cell::from(Span::styled("command", help_style)),
+            Cell::from(Span::styled("15404", key_style)),
+            Cell::from(Span::styled("spotify", help_style)),
+            Cell::from(Span::styled("11", help_style)),
+            Cell::from(Span::styled("20", help_style)),
+            Cell::from(Span::styled("0.5", key_style)),
+            Cell::from(Span::styled("0.6", help_style)),
+            Cell::from(Span::styled("15215", key_style)),
+            Cell::from(Span::styled("58528", help_style)),
+            Cell::from(Span::styled("sleeping", key_style)),
+            Cell::from(Span::styled("spotify.py", help_style)),
         ]);
         rows.push(row);
 
@@ -73,6 +80,22 @@ fn draw_process(rect: &Rect) -> Table {
                 .border_type(BorderType::Plain)
                 .title("All process"),
         )
-        .widths(&[Constraint::Length(11), Constraint::Min(20)])
+        .header(
+            Row::new(vec!["pid", "name", "parentId","priority",
+                                "%CPU","%MEM","read(kb)","write(kb)",
+                                "state","command"])
+                .style(Style::default().fg(Color::LightGreen))
+                .bottom_margin(1)
+        )
+        .widths(&[Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10),
+                Constraint::Min(10)])
         .column_spacing(1)
 }
