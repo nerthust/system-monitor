@@ -1,7 +1,7 @@
 use self::state::AppState;
 
 pub mod state;
-pub mod layout;
+pub mod widgets;
 
 /// The main application, containing the state
 pub struct App {

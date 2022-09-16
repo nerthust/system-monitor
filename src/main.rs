@@ -4,7 +4,7 @@ use std::{thread, time};
 
 use rtop::core::system_reader::SystemReader;
 use rtop::ui::app::App;
-use rtop::ui::widget::start_ui;
+use rtop::ui::layout::start_ui;
 
 fn main() {
     let mut sys_data = SystemReader::new(false);
