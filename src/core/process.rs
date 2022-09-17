@@ -2,6 +2,7 @@ use procfs::process::{self, Process, Stat};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
+use math::round;
 
 use crate::core::error::RTopError;
 use crate::core::network::{get_net_entry_map, get_net_ports, INode, NetEntry};
@@ -18,10 +19,10 @@ pub struct ProcData {
     pub parent_pid: Pid,
 
     // CPU usage as a percentage.
-    pub cpu_usage_percent: f64,
+    pub round_cpu_usage_percent: f64,
 
     // Memory usage as a percentage.
-    pub mem_usage_percent: f64,
+    pub round_mem_usage_percent: f64,
 
     // Total number of bytes read by the process on disk.
     pub total_disk_read_bytes: Option<u64>,
@@ -92,8 +93,8 @@ impl ProcData {
         let data = ProcData {
             pid: proc.pid,
             parent_pid: stat.ppid,
-            cpu_usage_percent,
-            mem_usage_percent,
+            round_cpu_usage_percent,
+            round_mem_usage_percent,
             priority: stat.priority,
             total_disk_read_bytes,
             total_disk_write_bytes,
@@ -155,7 +156,9 @@ pub fn read_process_data(
         all_pids.difference(&current_pids).for_each(|k| {
             cpu_times.remove(&k);
         });
-
+        //sort process
+        data.sort_by(|a, b|
+            b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
         Ok(data)
     } else {
         Err(RTopError {

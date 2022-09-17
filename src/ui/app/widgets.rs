@@ -1,10 +1,11 @@
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Style};
 use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table};
-use tui::text::{Span, Spans};
+use tui::text::{Span};
 use tui::Frame;
 
+use crate::core::process::ProcData;
 use crate::ui::app::App;
 
 pub fn draw<B>(rect: &mut Frame<B>, _app: &App)
@@ -28,7 +29,7 @@ where
     let title = draw_title();
     rect.render_widget(title, chunks[0]);
     // Process block
-    let process = draw_process(&size);
+    let process = draw_process(_app.data().to_vec());
     rect.render_widget(process, chunks[1]);
 }
 
@@ -53,25 +54,29 @@ fn draw_title<'a>() -> Paragraph<'a> {
 //    }
 //}
 
-fn draw_process(rect: &Rect) -> Table {
+
+fn draw_process(data: Vec<ProcData>) -> Table<'static>{
     let key_style = Style::default().fg(Color::LightCyan);
     let help_style = Style::default().fg(Color::Gray);
 
     let mut rows = vec![];
 
-    let row = Row::new(vec![
-            Cell::from(Span::styled("15404", key_style)),
-            Cell::from(Span::styled("spotify", help_style)),
-            Cell::from(Span::styled("11", help_style)),
-            Cell::from(Span::styled("20", help_style)),
-            Cell::from(Span::styled("0.5", key_style)),
-            Cell::from(Span::styled("0.6", help_style)),
-            Cell::from(Span::styled("15215", key_style)),
-            Cell::from(Span::styled("58528", help_style)),
-            Cell::from(Span::styled("sleeping", key_style)),
-            Cell::from(Span::styled("spotify.py", help_style)),
+    for process in data.iter() {
+        let row = Row::new(vec![
+            Cell::from(Span::styled(process.pid.to_string(), key_style)),
+            Cell::from(Span::styled(process.parent_pid.to_string(), help_style)),
+            Cell::from(Span::styled(process.priority.to_string(), help_style)),
+            Cell::from(Span::styled(process.round_cpu_usage_percent.to_string(), key_style)),
+            Cell::from(Span::styled(process.round_mem_usage_percent.to_string(), help_style)),
+            Cell::from(Span::styled(process.total_disk_read_bytes.unwrap_or(0).to_string(), key_style)),
+            Cell::from(Span::styled(process.total_disk_write_bytes.unwrap_or(0).to_string(), help_style)),
+            Cell::from(Span::styled(process.state.0.clone(), key_style)),
+            Cell::from(Span::styled(process.uid.unwrap().to_string(), help_style)),
+            Cell::from(Span::styled(process.name.to_string(), key_style)),
+            Cell::from(Span::styled(process.command.to_string(), key_style))
         ]);
         rows.push(row);
+    }
 
     Table::new(rows)
         .block(
@@ -81,9 +86,9 @@ fn draw_process(rect: &Rect) -> Table {
                 .title("All process"),
         )
         .header(
-            Row::new(vec!["pid", "name", "parentId","priority",
-                                "%CPU","%MEM","read(kb)","write(kb)",
-                                "state","command"])
+            Row::new(vec!["PID","PARENT_ID","PRIORITY",
+                                "%CPU","%MEM","READ(KB)","WRITE(KB)",
+                                "STATE","UID","NAME", "COMMAND"])
                 .style(Style::default().fg(Color::LightGreen))
                 .bottom_margin(1)
         )
@@ -96,6 +101,7 @@ fn draw_process(rect: &Rect) -> Table {
                 Constraint::Min(10),
                 Constraint::Min(10),
                 Constraint::Min(10),
-                Constraint::Min(10)])
+                Constraint::Min(30),
+                Constraint::Min(10000)])
         .column_spacing(1)
 }
