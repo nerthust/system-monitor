@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use sysinfo::{self, System, SystemExt};
 
+use procfs::net::{dev_status, DeviceStatus};
+
 use crate::core::error::RTopError;
 use crate::core::process::{self, Pid, ProcData};
 
@@ -35,4 +37,17 @@ impl SystemReader {
             self.total_memory_bytes,
         )
     }
+}
+
+pub fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
+    let mut bytes = 0;                                    
+    for dev in dev_status {                               
+        let status = dev.1;                             
+        if is_recv_bytes {                              
+            bytes += status.recv_bytes;                 
+        } else {                                                       
+            bytes += status.sent_bytes;                                
+        }                                                              
+    }                                                                  
+    bytes                                                              
 }
