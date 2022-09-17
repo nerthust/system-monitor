@@ -4,13 +4,13 @@ use rtop::core::system_reader::SystemReader;
 use rtop::ui::layout::start_ui;
 
 fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
-    if args.len() == 3 {
-        if args[2].eq("-u") {
+    if args.len() == 2 {
+        if args[1].eq("u") {
             return Ok(true);
         } else {
             return Err("Not a valid argument");
         }
-    }else if args.len() > 3 {
+    }else if args.len() > 2 {
         return Err("Too many arguments");
     }
 
