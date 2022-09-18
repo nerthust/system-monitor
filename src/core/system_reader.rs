@@ -27,7 +27,7 @@ impl SystemReader {
         let mut system = System::new_with_specifics(sysinfo::RefreshKind::new());
         system.refresh_memory();
 
-        let dev_status = dev_status().unwrap();                                 
+        //let dev_status = dev_status().unwrap();                                 
 
         SystemReader {
             prev_idle: 0.0,
@@ -35,8 +35,8 @@ impl SystemReader {
             cpu_times: HashMap::new(),
             use_current_cpu_total,
             total_memory_bytes: system.total_memory(),
-            total_rx_bytes: calculate_general_bytes_network(true, &dev_status),
-            total_tx_bytes: calculate_general_bytes_network(false, &dev_status),
+            total_rx_bytes: 0,
+            total_tx_bytes: 0,
         }
     }
 
@@ -59,7 +59,7 @@ impl SystemReader {
     }
 }
 
-fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
+pub fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
     let mut bytes = 0;                                    
     for dev in dev_status {                               
         let status = dev.1;                             

@@ -3,6 +3,7 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Instant, Duration};
 use std::{io, cell::RefCell, rc::Rc};
+use procfs::net::{dev_status, DeviceStatus};
 
 use crossterm::event::KeyEvent;
 use crossterm::{
@@ -15,7 +16,7 @@ use tui::widgets::TableState;
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::core::error::RTopError;
-use crate::core::system_reader::SystemReader;
+use crate::core::system_reader::{SystemReader, calculate_general_bytes_network};
 use crate::ui::app::widgets;
 use crate::ui::app::{App};
 
@@ -54,11 +55,17 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     let mut proc_table_state:TableState = TableState::default();
     proc_table_state.select(Some(0));
     
-    
+    let data = sys_data.read_process_data().unwrap();
+    let app = Rc::new(RefCell::new(App::new(data)));
+
     loop {
         let (data, (tx_b_n,rx_b_n))= rxproc.recv().unwrap();
         let app = Rc::new(RefCell::new(App::new(data, tx_b_n,rx_b_n)));
         let a = app.borrow();
+        let dev_status = dev_status().unwrap();                                 
+        sys_data.total_rx_bytes = calculate_general_bytes_network(true, &dev_status);
+        sys_data.total_tx_bytes = calculate_general_bytes_network(false, &dev_status);
+
         let table_state = proc_table_state.borrow_mut();
         // Render
         terminal.draw(|rect| widgets::draw(rect, &a, table_state))?;
