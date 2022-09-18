@@ -1,7 +1,7 @@
-use std::{thread, time};
 use procfs::net::dev_status;
+use std::{thread, time};
 
-use rtop::core::system_reader::{SystemReader, calculate_general_bytes_network};
+use rtop::core::system_reader::{calculate_general_bytes_network, SystemReader};
 
 fn main() {
     let mut sys_data = SystemReader::new(false);
@@ -15,11 +15,14 @@ fn main() {
             }
         });
 
-        let dev_status = dev_status().unwrap();                                 
-        let recv_bytes = calculate_general_bytes_network(true, &dev_status);    
-        let sent_bytes = calculate_general_bytes_network(false, &dev_status);   
+        let dev_status = dev_status().unwrap();
+        let recv_bytes = calculate_general_bytes_network(true, &dev_status);
+        let sent_bytes = calculate_general_bytes_network(false, &dev_status);
 
-        println!("recv_bytes: {} bits -- sent_bytes: {} bits", recv_bytes, sent_bytes);
+        println!(
+            "recv_bytes: {} bits -- sent_bytes: {} bits",
+            recv_bytes, sent_bytes
+        );
 
         thread::sleep(delay);
         println!("--");

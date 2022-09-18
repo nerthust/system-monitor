@@ -1,8 +1,8 @@
 use procfs::process::{Process, Stat};
 use std::collections::HashMap;
 use std::collections::HashSet;
-use sysinfo::{ProcessStatus, System, NetworkExt, SystemExt};
 use std::time::Instant;
+use sysinfo::{NetworkExt, ProcessStatus, System, SystemExt};
 
 use crate::core::error::RTopError;
 

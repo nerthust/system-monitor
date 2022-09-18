@@ -39,15 +39,18 @@ impl SystemReader {
     }
 }
 
-pub fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
-    let mut bytes = 0;                                    
-    for dev in dev_status {                               
-        let status = dev.1;                             
-        if is_recv_bytes {                              
-            bytes += status.recv_bytes;                 
-        } else {                                                       
-            bytes += status.sent_bytes;                                
-        }                                                              
-    }                                                                  
-    bytes                                                              
+pub fn calculate_general_bytes_network(
+    is_recv_bytes: bool,
+    dev_status: &HashMap<String, DeviceStatus>,
+) -> u64 {
+    let mut bytes = 0;
+    for dev in dev_status {
+        let status = dev.1;
+        if is_recv_bytes {
+            bytes += status.recv_bytes;
+        } else {
+            bytes += status.sent_bytes;
+        }
+    }
+    bytes
 }
