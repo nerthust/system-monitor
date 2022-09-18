@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use sysinfo::{self, System, SystemExt};
+use procfs::net::{dev_status, DeviceStatus};
 
 use crate::core::error::RTopError;
 use crate::core::network::get_system_network_stats;
@@ -11,6 +12,8 @@ pub struct SystemReader {
     cpu_times: HashMap<Pid, u64>,
     use_current_cpu_total: bool,
     pub total_memory_bytes: u64,
+    pub total_rx_bytes: u64,
+    pub total_tx_bytes: u64,
 }
 
 pub struct SystemData {
@@ -24,12 +27,16 @@ impl SystemReader {
         let mut system = System::new_with_specifics(sysinfo::RefreshKind::new());
         system.refresh_memory();
 
+        let dev_status = dev_status().unwrap();                                 
+
         SystemReader {
             prev_idle: 0.0,
             prev_non_idle: 0.0,
             cpu_times: HashMap::new(),
             use_current_cpu_total,
             total_memory_bytes: system.total_memory(),
+            total_rx_bytes: calculate_general_bytes_network(true, &dev_status),
+            total_tx_bytes: calculate_general_bytes_network(false, &dev_status),
         }
     }
 
@@ -50,4 +57,17 @@ impl SystemReader {
             net_sent_bytes,
         })
     }
+}
+
+fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
+    let mut bytes = 0;                                    
+    for dev in dev_status {                               
+        let status = dev.1;                             
+        if is_recv_bytes {                              
+            bytes += status.recv_bytes;                 
+        } else {                                                       
+            bytes += status.sent_bytes;                                
+        }                                                              
+    }                                                                  
+    bytes                                                              
 }

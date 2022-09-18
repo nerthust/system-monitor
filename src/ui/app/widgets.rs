@@ -1,8 +1,8 @@
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Style, Modifier};
-use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table, TableState};
-use tui::text::{Span};
+use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table, TableState, ListItem, List};
+use tui::text::{Span, Spans};
 use tui::Frame;
 
 use crate::core::process::ProcData;
@@ -27,8 +27,13 @@ where
         .split(size);
 
     // Title block
-    let title = draw_title();
-    rect.render_widget(title, chunks[0]);
+    //let title = draw_title();
+    //rect.render_widget(title, chunks[0]);
+    //Network general
+    let net_list = draw_network_general(&sys_data);
+    rect.render_widget(net_list, chunks[0]);
+    //let net_parag = draw_network_general();
+    //rect.render_stateful_widget(net_parag, chunks[0], proc_state);
     // Process block
     let data = sys_data.read_process_data();
     let process = draw_process(data.unwrap());
@@ -56,6 +61,28 @@ fn draw_title<'a>() -> Paragraph<'a> {
 //        panic!("Require height >= 28, (got {})", rect.height);
 //    }
 //}
+
+fn draw_network_general<'a>(sys_data: &SystemReader) -> List<'static>{
+    let rx_style = Style::default().fg(Color::LightGreen);
+    let tx_style = Style::default().fg(Color::LightCyan);
+
+    let spans = Spans::from(vec![
+        Span::styled("Total RX: ", rx_style),
+        Span::styled(sys_data.total_rx_bytes.to_string() + " Bytes", rx_style),
+        Span::raw("      "),
+        Span::styled("Total TX: ", tx_style),
+        Span::styled(sys_data.total_tx_bytes.to_string() + " Bytes", tx_style),
+    ]);
+
+    let list_items = [ListItem::new(vec![spans])];
+    List::new(list_items)
+        .block(
+            Block::default()
+            .title("Rtop")
+            .title_alignment(Alignment::Center)
+            .borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+}
 
 
 fn draw_process(data: Vec<ProcData>) -> Table<'static>{
