@@ -1,14 +1,15 @@
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
-use tui::style::{Color, Style};
-use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table};
+use tui::style::{Color, Style, Modifier};
+use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table, TableState};
 use tui::text::{Span};
 use tui::Frame;
 
 use crate::core::process::ProcData;
+use crate::core::system_reader::SystemReader;
 use crate::ui::app::App;
 
-pub fn draw<B>(rect: &mut Frame<B>, _app: &App)
+pub fn draw<B>(rect: &mut Frame<B>, _app: &App, proc_state: &mut TableState, sys_data: &mut SystemReader)
 where
     B: Backend,
 {
@@ -29,8 +30,10 @@ where
     let title = draw_title();
     rect.render_widget(title, chunks[0]);
     // Process block
-    let process = draw_process(_app.data().to_vec());
-    rect.render_widget(process, chunks[1]);
+    let data = sys_data.read_process_data();
+    let process = draw_process(data.unwrap());
+    rect.render_stateful_widget(process, chunks[1], proc_state);
+    //rect.render_widget(process, chunks[1]);
 }
 
 fn draw_title<'a>() -> Paragraph<'a> {
@@ -81,9 +84,15 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static>{
     Table::new(rows)
         .block(
             Block::default()
-                .borders(Borders::ALL)
+                .borders(Borders::TOP)
                 .border_type(BorderType::Plain)
                 .title("All process"),
+        )
+        .highlight_style(
+            Style::default()
+                .bg(Color::Yellow)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD)
         )
         .header(
             Row::new(vec!["PID","PARENT_ID","PRIORITY",

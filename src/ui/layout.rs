@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Instant, Duration};
@@ -8,7 +9,8 @@ use crossterm::{
     execute
 };
 
-use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen, Clear, ClearType};
+use tui::widgets::TableState;
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::core::error::RTopError;
@@ -55,16 +57,17 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
         }
     });
 
-
-
-
+    let mut proc_table_state:TableState = TableState::default();
+    proc_table_state.select(Some(0));
+    
+    let data = sys_data.read_process_data().unwrap();
+    let app = Rc::new(RefCell::new(App::new(data)));
+    
     loop {
-        let data = sys_data.read_process_data().unwrap();
-        let app = Rc::new(RefCell::new(App::new(data)));
         let a = app.borrow();
+        let table_state = proc_table_state.borrow_mut();
         // Render
-        terminal.draw(|rect| widgets::draw(rect, &a))?;
-        // TODO handle inputs here
+        terminal.draw(|rect| widgets::draw(rect, &a, table_state, &mut sys_data))?;
         
         match rx.recv()? {
             InputEvent::Input(event) => match event.code {
@@ -74,11 +77,30 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                 KeyCode::Char('c') => {
                     break;
                 }
+                KeyCode::Down => {
+                    if let Some(selected) = table_state.selected() {
+                        if selected >= 50 {
+                            table_state.select(Some(0));
+                        } else {
+                            table_state.select(Some(selected + 1));
+                        }
+                    }
+                }
+                KeyCode::Up => {
+                    if let Some(selected) = table_state.selected() {
+                        if selected > 0 {
+                            table_state.select(Some(selected - 1));
+                        } else {
+                            table_state.select(Some(50 - 1));
+                        }
+                    }
+
+                }
                 _ => {}
             },
-            _tick_rate => {}
+            InputEvent::Tick => {}
         }
-        //thread::sleep(delay);
+        //thread::sleep(Duration::from_millis(500))
     }
 
     terminal.clear()?;
