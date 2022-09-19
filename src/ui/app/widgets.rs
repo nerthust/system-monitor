@@ -1,20 +1,19 @@
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Style, Modifier};
-use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table, TableState, ListItem, List};
+use tui::widgets::{Block, BorderType, Borders, Cell, Row, Table, TableState, ListItem, List};
 use tui::text::{Span, Spans};
 use tui::Frame;
 
 use crate::core::process::ProcData;
-use crate::core::system_reader::SystemReader;
 use crate::ui::app::App;
 
-pub fn draw<B>(rect: &mut Frame<B>, _app: &App, proc_state: &mut TableState, sys_data: &mut SystemReader)
+pub fn draw<B>(rect: &mut Frame<B>, _app: &App, proc_state: &mut TableState)
 where
     B: Backend,
 {
     let size = rect.size();
-    //check_size(&size);
+
     // Vertical layout
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -26,59 +25,33 @@ where
         )
         .split(size);
 
-    // Title block
-    //let title = draw_title();
-    //rect.render_widget(title, chunks[0]);
     //Network general
-    let net_list = draw_network_general(&sys_data);
+    let net_list = draw_network_general(_app.tx_bits_n, _app.rx_bits_n);
     rect.render_widget(net_list, chunks[0]);
-    //let net_parag = draw_network_general();
-    //rect.render_stateful_widget(net_parag, chunks[0], proc_state);
+
     // Process block
-    let data = sys_data.read_process_data();
-    let process = draw_process(data.unwrap());
+    let process = draw_process(_app.data().to_vec());
     rect.render_stateful_widget(process, chunks[1], proc_state);
-    //rect.render_widget(process, chunks[1]);
 }
 
-fn draw_title<'a>() -> Paragraph<'a> {
-    Paragraph::new("RTop :)")
-        .style(Style::default().fg(Color::LightGreen))
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White))
-                .border_type(BorderType::Plain),
-        )
-}
-
-//fn check_size(rect: &Rect) {
-//    if rect.width < 52 {
-//        panic!("Require width >= 52, (got {})", rect.width);
-//    }
-//    if rect.height < 28 {
-//        panic!("Require height >= 28, (got {})", rect.height);
-//    }
-//}
-
-fn draw_network_general<'a>(sys_data: &SystemReader) -> List<'static>{
-    let rx_style = Style::default().fg(Color::LightGreen);
+fn draw_network_general<'a>(tx: u64 , rx: u64) -> List<'static>{
+    let rx_style = Style::default().fg(Color::LightMagenta);
     let tx_style = Style::default().fg(Color::LightCyan);
 
     let spans = Spans::from(vec![
         Span::styled("Total RX: ", rx_style),
-        Span::styled(sys_data.total_rx_bytes.to_string() + " Bytes", rx_style),
+        Span::styled(tx.to_string() + " Bytes", rx_style),
         Span::raw("      "),
         Span::styled("Total TX: ", tx_style),
-        Span::styled(sys_data.total_tx_bytes.to_string() + " Bytes", tx_style),
+        Span::styled(rx.to_string() + " Bytes", tx_style),
     ]);
 
     let list_items = [ListItem::new(vec![spans])];
     List::new(list_items)
         .block(
             Block::default()
-            .title("Rtop")
+            .title("  Rtop  ")
+            .title_style(Style::default().fg(Color::LightGreen))
             .title_alignment(Alignment::Center)
             .borders(Borders::ALL))
             .style(Style::default().fg(Color::White))
@@ -111,7 +84,7 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static>{
     Table::new(rows)
         .block(
             Block::default()
-                .borders(Borders::TOP)
+                .borders(Borders::ALL)
                 .border_type(BorderType::Plain)
                 .title("All process"),
         )
