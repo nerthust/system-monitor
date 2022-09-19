@@ -1,4 +1,4 @@
-use procfs::process::{Process, Stat};
+use procfs::process::{self, Process, Stat};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
@@ -108,37 +108,30 @@ pub fn read_process_data(
 ) -> Result<Vec<ProcData>, RTopError> {
     let mut current_pids = HashSet::new();
     if let Ok((cpu_usage, cpu_percentage)) = cpu_usage_calculation(prev_idle, prev_non_idle) {
-        let data = std::fs::read_dir("/proc")?
-            .filter_map(|dir| {
-                if let Ok(dir) = dir {
-                    if let Ok(pid) = dir.file_name().to_string_lossy().trim().parse::<Pid>() {
-                        if let Ok(proc) = Process::new(pid) {
-                            if let Ok(stat) = proc.stat() {
-                                let prev_proc_cpu_time = *cpu_times.get(&pid).unwrap_or(&0);
-                                let (data, new_proc_cpu_time) = ProcData::new(
-                                    proc,
-                                    stat,
-                                    cpu_usage,
-                                    cpu_percentage,
-                                    prev_proc_cpu_time,
-                                    total_memory_bytes,
-                                    use_current_cpu_total,
-                                );
-                                cpu_times.insert(pid, new_proc_cpu_time);
-                                current_pids.insert(pid);
-                                return Some(data);
-                            } else {
-                                return None;
-                            }
-                        } else {
-                            return None;
-                        }
+        let data = process::all_processes()?
+            .filter_map(|proc| {
+                if let Ok(proc) = proc {
+                    if let Ok(stat) = proc.stat() {
+                        let pid = proc.pid;
+                        let prev_proc_cpu_time = *cpu_times.get(&pid).unwrap_or(&0);
+                        let (data, new_proc_cpu_time) = ProcData::new(
+                            proc,
+                            stat,
+                            cpu_usage,
+                            cpu_percentage,
+                            prev_proc_cpu_time,
+                            total_memory_bytes,
+                            use_current_cpu_total,
+                        );
+                        cpu_times.insert(pid, new_proc_cpu_time);
+                        current_pids.insert(pid);
+                        return Some(data);
+                    } else {
+                        return None;
                     }
-
+                } else {
                     return None;
                 }
-
-                None
             })
             .collect();
 

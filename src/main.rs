@@ -12,7 +12,7 @@ fn main() {
         println!("Network sent bytes {:?}", data.net_sent_bytes);
 
         data.processes.iter().for_each(|proc| {
-            if proc.name.contains("teams") {
+            if proc.name.contains("chrome") {
                 println!("({:?}, {:?})", proc.name, proc.mem_usage_percent);
             }
         });
