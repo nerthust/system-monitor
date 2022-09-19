@@ -1,7 +1,6 @@
-use procfs::net::dev_status;
 use std::{thread, time};
 
-use rtop::core::system_reader::{calculate_general_bytes_network, SystemReader};
+use rtop::core::system_reader::SystemReader;
 
 fn main() {
     let mut sys_data = SystemReader::new(false);
@@ -9,20 +8,14 @@ fn main() {
 
     loop {
         let data = sys_data.read_process_data().unwrap();
-        data.iter().for_each(|proc| {
-            if proc.name.contains("firefox") {
-                //println!("({:?}, {:?})", proc.name, proc.mem_usage_percent);
+        println!("Network received bytes = {:?}", data.net_received_bytes);
+        println!("Network sent bytes {:?}", data.net_sent_bytes);
+
+        data.processes.iter().for_each(|proc| {
+            if proc.name.contains("teams") {
+                println!("({:?}, {:?})", proc.name, proc.mem_usage_percent);
             }
         });
-
-        let dev_status = dev_status().unwrap();
-        let recv_bytes = calculate_general_bytes_network(true, &dev_status);
-        let sent_bytes = calculate_general_bytes_network(false, &dev_status);
-
-        println!(
-            "recv_bytes: {} bits -- sent_bytes: {} bits",
-            recv_bytes, sent_bytes
-        );
 
         thread::sleep(delay);
         println!("--");

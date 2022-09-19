@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use sysinfo::{self, System, SystemExt};
 
-use procfs::net::{dev_status, DeviceStatus};
-
 use crate::core::error::RTopError;
+use crate::core::network::get_system_network_stats;
 use crate::core::process::{self, Pid, ProcData};
 
 pub struct SystemReader {
@@ -12,6 +11,12 @@ pub struct SystemReader {
     cpu_times: HashMap<Pid, u64>,
     use_current_cpu_total: bool,
     pub total_memory_bytes: u64,
+}
+
+pub struct SystemData {
+    pub processes: Vec<ProcData>,
+    pub net_received_bytes: u64,
+    pub net_sent_bytes: u64,
 }
 
 impl SystemReader {
@@ -28,29 +33,21 @@ impl SystemReader {
         }
     }
 
-    pub fn read_process_data(&mut self) -> Result<Vec<ProcData>, RTopError> {
-        process::read_process_data(
+    pub fn read_process_data(&mut self) -> Result<SystemData, RTopError> {
+        let processes = process::read_process_data(
             &mut self.prev_idle,
             &mut self.prev_non_idle,
             &mut self.cpu_times,
             self.use_current_cpu_total,
             self.total_memory_bytes,
-        )
-    }
-}
+        )?;
 
-pub fn calculate_general_bytes_network(
-    is_recv_bytes: bool,
-    dev_status: &HashMap<String, DeviceStatus>,
-) -> u64 {
-    let mut bytes = 0;
-    for dev in dev_status {
-        let status = dev.1;
-        if is_recv_bytes {
-            bytes += status.recv_bytes;
-        } else {
-            bytes += status.sent_bytes;
-        }
+        let (net_received_bytes, net_sent_bytes) = get_system_network_stats();
+
+        Ok(SystemData {
+            processes,
+            net_received_bytes,
+            net_sent_bytes,
+        })
     }
-    bytes
 }
