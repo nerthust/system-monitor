@@ -42,6 +42,9 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
             let mut data = sys_data.read_process_data().unwrap();
             data.sort_by(|a, b|
             b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
+            let dev_status = dev_status().unwrap();                                 
+            sys_data.total_rx_bytes = calculate_general_bytes_network(true, &dev_status);
+            sys_data.total_tx_bytes = calculate_general_bytes_network(false, &dev_status);
             let tx_b_n = sys_data.total_tx_bytes;
             let rx_b_n = sys_data.total_rx_bytes;
             txproc.send((data,(tx_b_n,rx_b_n))).unwrap();
@@ -61,10 +64,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     loop {
         let (data, (tx_b_n,rx_b_n))= rxproc.recv().unwrap();
         let app = Rc::new(RefCell::new(App::new(data, tx_b_n,rx_b_n)));
-        let a = app.borrow();
-        let dev_status = dev_status().unwrap();                                 
-        sys_data.total_rx_bytes = calculate_general_bytes_network(true, &dev_status);
-        sys_data.total_tx_bytes = calculate_general_bytes_network(false, &dev_status);
+        let a = app.borrow();                            
 
         let table_state = proc_table_state.borrow_mut();
         // Render
