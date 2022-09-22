@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use sysinfo::{self, System, SystemExt};
-use procfs::net::{dev_status, DeviceStatus};
+use procfs::net::{DeviceStatus};
 
 use crate::core::error::RTopError;
 use crate::core::network::get_system_network_stats;
@@ -25,9 +25,7 @@ pub struct SystemData {
 impl SystemReader {
     pub fn new(use_current_cpu_total: bool) -> Self {
         let mut system = System::new_with_specifics(sysinfo::RefreshKind::new());
-        system.refresh_memory();
-
-        //let dev_status = dev_status().unwrap();                                 
+        system.refresh_memory();                           
 
         SystemReader {
             prev_idle: 0.0,

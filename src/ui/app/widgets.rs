@@ -8,7 +8,7 @@ use tui::Frame;
 use crate::core::process::ProcData;
 use crate::ui::app::App;
 
-pub fn draw<B>(rect: &mut Frame<B>, _app: &App, proc_state: &mut TableState)
+pub fn draw<B>(rect: &mut Frame<B>, _app: &mut App, proc_state: &mut TableState)
 where
     B: Backend,
 {
@@ -46,12 +46,13 @@ fn draw_network_general<'a>(tx: u64 , rx: u64) -> List<'static>{
         Span::styled(rx.to_string() + " Bytes", tx_style),
     ]);
 
+    let title = Span::styled("  Rtop  ", Style::default().fg(Color::LightGreen));
+
     let list_items = [ListItem::new(vec![spans])];
     List::new(list_items)
         .block(
             Block::default()
-            .title("  Rtop  ")
-            .title_style(Style::default().fg(Color::LightGreen))
+            .title(title)
             .title_alignment(Alignment::Center)
             .borders(Borders::ALL))
             .style(Style::default().fg(Color::White))

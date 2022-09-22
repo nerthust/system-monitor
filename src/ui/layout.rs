@@ -2,12 +2,10 @@ use std::borrow::BorrowMut;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Instant, Duration};
-use std::{io, cell::RefCell, rc::Rc};
-use procfs::net::{dev_status, DeviceStatus};
+use std::io;
 
-use crossterm::event::KeyEvent;
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyEvent},
     execute
 };
 
@@ -16,13 +14,11 @@ use tui::widgets::TableState;
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::core::error::RTopError;
-use crate::core::system_reader::{SystemReader, calculate_general_bytes_network};
+use crate::core::system_reader::SystemReader;
 use crate::ui::app::widgets;
-use crate::ui::app::{App};
+use crate::ui::app::App;
 
 use super::inputs::InputEvent;
-
-
 
 
 pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
@@ -35,41 +31,25 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     terminal.clear()?;
     terminal.hide_cursor()?;
 
-    //read process thread
-    let (txproc, rxproc) = mpsc::channel();
-    thread::spawn(move || {
-        loop {
-            let mut data = sys_data.read_process_data().unwrap();
-            data.sort_by(|a, b|
-            b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
-            let dev_status = dev_status().unwrap();                                 
-            sys_data.total_rx_bytes = calculate_general_bytes_network(true, &dev_status);
-            sys_data.total_tx_bytes = calculate_general_bytes_network(false, &dev_status);
-            let tx_b_n = sys_data.total_tx_bytes;
-            let rx_b_n = sys_data.total_rx_bytes;
-            txproc.send((data,(tx_b_n,rx_b_n))).unwrap();
-            thread::sleep(Duration::from_millis(200))
-        }
-    });
-
     //read input thread
     let rxinput = input_thread(Duration::from_millis(1000));
     
     let mut proc_table_state:TableState = TableState::default();
     proc_table_state.select(Some(0));
-    
+
+    //let (data, (tx_b_n,rx_b_n))= rxproc.recv().unwrap();
+
     let data = sys_data.read_process_data().unwrap();
-    let app = Rc::new(RefCell::new(App::new(data)));
+    let mut app = App::new(data, 0,0);
+
+    //let mut app = Rc::new(RefCell::new(app));
 
     loop {
-        let (data, (tx_b_n,rx_b_n))= rxproc.recv().unwrap();
-        let app = Rc::new(RefCell::new(App::new(data, tx_b_n,rx_b_n)));
-        let a = app.borrow();                            
-
+        //App state
+        let a = app.borrow_mut();                            
         let table_state = proc_table_state.borrow_mut();
-        // Render
-        terminal.draw(|rect| widgets::draw(rect, &a, table_state))?;
-        
+
+        //Wait for input
         match rxinput.recv()? {
             InputEvent::Input(event) => match event.code {
                 KeyCode::Char('q') => {
@@ -99,9 +79,16 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                 }
                 _ => {}
             },
-            InputEvent::Tick => {}
+            InputEvent::Tick => {
+                //Update data
+                let new_data = sys_data.read_process_data().unwrap();
+                a.update_data(&new_data);
+                //Update tx/rx network bits
+            }
         }
-        //thread::sleep(Duration::from_millis(500))
+
+        // Render
+        terminal.draw(|rect| widgets::draw(rect, a, table_state))?;
     }
 
     terminal.clear()?;
