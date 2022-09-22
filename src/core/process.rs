@@ -156,7 +156,7 @@ pub fn read_process_data(
         all_pids.difference(&current_pids).for_each(|k| {
             cpu_times.remove(&k);
         });
-        //sort process
+        //Sort process
         data.sort_by(|a, b|
             b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
         Ok(data)

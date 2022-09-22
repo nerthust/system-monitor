@@ -33,16 +33,12 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
 
     //read input thread
     let rxinput = input_thread(Duration::from_millis(1000));
-    
-    let mut proc_table_state:TableState = TableState::default();
-    proc_table_state.select(Some(0));
-
-    //let (data, (tx_b_n,rx_b_n))= rxproc.recv().unwrap();
 
     let data = sys_data.read_process_data().unwrap();
     let mut app = App::new(data, 0,0);
 
-    //let mut app = Rc::new(RefCell::new(app));
+    let mut proc_table_state:TableState = TableState::default();
+    proc_table_state.select(Some(0));
 
     loop {
         //App state

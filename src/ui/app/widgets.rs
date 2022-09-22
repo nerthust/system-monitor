@@ -25,11 +25,11 @@ where
         )
         .split(size);
 
-    //Network general
+    //General network 
     let net_list = draw_network_general(_app.tx_bits_n, _app.rx_bits_n);
     rect.render_widget(net_list, chunks[0]);
 
-    // Process block
+    // Process table
     let process = draw_process(_app.data().to_vec());
     rect.render_stateful_widget(process, chunks[1], proc_state);
 }

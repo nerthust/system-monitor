@@ -6,9 +6,9 @@ pub mod widgets;
 pub struct App {
     ///all data per process
     data: Vec<ProcData>,
-    //bits transmited
+    //Network bits transmited
     tx_bits_n: u64,
-    //bits received
+    //Network bits received
     rx_bits_n: u64,
 }
 
