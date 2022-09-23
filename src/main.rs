@@ -12,7 +12,7 @@ fn main() {
         //println!("Network sent bytes {:?}", data.net_sent_bytes);
 
         data.processes.iter().for_each(|proc| {
-            if proc.name.contains("chrome") {
+            if proc.name.contains("firefox") {
                 for tcp in &proc.tcp_ports {
                     println!("tcp: {}", tcp);
                 }

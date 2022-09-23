@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use sysinfo::ProcessStatus;
 
 use crate::core::error::RTopError;
-//use crate::core::network::{get_tcp_port, get_udp_port};
+use crate::core::network::{NetEntry, get_net_entries, get_net_ports};
 
 pub type Pid = libc::pid_t;
 pub type Uid = libc::uid_t;
@@ -66,6 +66,7 @@ impl ProcData {
         prev_cpu_time: u64,
         total_memory_bytes: u64,
         use_current_cpu_total: bool,
+        net_list: &Vec<NetEntry>
     ) -> (Self, u64) {
         let (command, name) = get_proc_cmd_and_name(&proc, &stat);
         let (cpu_usage_percent, new_process_time) = get_cpu_usage(
@@ -86,6 +87,8 @@ impl ProcData {
         let mem_usage_bytes = u64::try_from(stat.rss_bytes().unwrap_or(0)).unwrap_or(0);
         let mem_usage_percent = mem_usage_bytes as f64 / total_memory_bytes as f64 * 100.0;
 
+        let (tcp_ports, udp_ports) = get_net_ports(&proc, &net_list);
+
         let data = ProcData {
             pid: proc.pid,
             parent_pid: stat.ppid,
@@ -100,8 +103,8 @@ impl ProcData {
             command: command,
             state: (ProcessStatus::from(stat.state).to_string(), stat.state),
             uid: proc.uid().ok(),
-            tcp_ports: Vec::new(),
-            udp_ports: Vec::new(),
+            tcp_ports: tcp_ports,
+            udp_ports: udp_ports,
         };
 
         (data, new_process_time)
@@ -116,6 +119,8 @@ pub fn read_process_data(
     total_memory_bytes: u64,
 ) -> Result<Vec<ProcData>, RTopError> {
     let mut current_pids = HashSet::new();
+
+    let net_list = get_net_entries();
 
     if let Ok((cpu_usage, cpu_percentage)) = cpu_usage_calculation(prev_idle, prev_non_idle) {
         let data = process::all_processes()?
@@ -132,6 +137,7 @@ pub fn read_process_data(
                             prev_proc_cpu_time,
                             total_memory_bytes,
                             use_current_cpu_total,
+                            &net_list,
                         );
                         cpu_times.insert(pid, new_proc_cpu_time);
                         current_pids.insert(pid);
