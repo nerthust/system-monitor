@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use sysinfo::ProcessStatus;
 
 use crate::core::error::RTopError;
-use crate::core::network::{NetEntry, get_net_entries, get_net_ports};
+use crate::core::network::{get_net_entries, get_net_ports, NetEntry};
 
 pub type Pid = libc::pid_t;
 pub type Uid = libc::uid_t;
@@ -66,7 +66,7 @@ impl ProcData {
         prev_cpu_time: u64,
         total_memory_bytes: u64,
         use_current_cpu_total: bool,
-        net_list: &Vec<NetEntry>
+        net_list: &Vec<NetEntry>,
     ) -> (Self, u64) {
         let (command, name) = get_proc_cmd_and_name(&proc, &stat);
         let (cpu_usage_percent, new_process_time) = get_cpu_usage(
