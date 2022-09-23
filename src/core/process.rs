@@ -1,8 +1,6 @@
-use procfs::process::{self, Process, Stat};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
-use math::round;
 
 use crate::core::error::RTopError;
 use crate::core::network::{get_net_entry_map, get_net_ports, INode, NetEntry};
@@ -157,8 +155,11 @@ pub fn read_process_data(
             cpu_times.remove(&k);
         });
         //Sort process
-        data.sort_by(|a, b|
-            b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
+        data.sort_by(|a, b| {
+            b.round_cpu_usage_percent
+                .partial_cmp(&a.round_cpu_usage_percent)
+                .unwrap()
+        });
         Ok(data)
     } else {
         Err(RTopError {

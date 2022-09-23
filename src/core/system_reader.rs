@@ -1,6 +1,6 @@
+use procfs::net::DeviceStatus;
 use std::collections::HashMap;
 use sysinfo::{self, System, SystemExt};
-use procfs::net::{DeviceStatus};
 
 use crate::core::error::RTopError;
 use crate::core::network::get_system_network_stats;
@@ -25,7 +25,7 @@ pub struct SystemData {
 impl SystemReader {
     pub fn new(use_current_cpu_total: bool) -> Self {
         let mut system = System::new_with_specifics(sysinfo::RefreshKind::new());
-        system.refresh_memory();                           
+        system.refresh_memory();
 
         SystemReader {
             prev_idle: 0.0,
@@ -57,15 +57,18 @@ impl SystemReader {
     }
 }
 
-pub fn calculate_general_bytes_network(is_recv_bytes: bool, dev_status: &HashMap<String, DeviceStatus>) -> u64 {      
-    let mut bytes = 0;                                    
-    for dev in dev_status {                               
-        let status = dev.1;                             
-        if is_recv_bytes {                              
-            bytes += status.recv_bytes;                 
-        } else {                                                       
-            bytes += status.sent_bytes;                                
-        }                                                              
-    }                                                                  
-    bytes                                                              
+pub fn calculate_general_bytes_network(
+    is_recv_bytes: bool,
+    dev_status: &HashMap<String, DeviceStatus>,
+) -> u64 {
+    let mut bytes = 0;
+    for dev in dev_status {
+        let status = dev.1;
+        if is_recv_bytes {
+            bytes += status.recv_bytes;
+        } else {
+            bytes += status.sent_bytes;
+        }
+    }
+    bytes
 }

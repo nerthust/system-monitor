@@ -10,14 +10,14 @@ fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
         } else {
             return Err("Not a valid argument");
         }
-    }else if args.len() > 2 {
+    } else if args.len() > 2 {
         return Err("Too many arguments");
     }
 
     Ok(false)
 }
 
-fn main() -> Result<(), &'static str>{
+fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
     let use_current_cpu_total = check_args(args)?;
 

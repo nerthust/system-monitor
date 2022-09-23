@@ -1,4 +1,3 @@
-
 pub enum InputEvent<I> {
     /// An input event occurred.
     Input(I),

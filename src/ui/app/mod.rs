@@ -18,36 +18,42 @@ impl App {
         let data = data;
         let tx_bits_n = tx_n;
         let rx_bits_n = rx_n;
-        Self { data, tx_bits_n, rx_bits_n }
+        Self {
+            data,
+            tx_bits_n,
+            rx_bits_n,
+        }
     }
 
-    pub fn data(&mut self) -> &Vec<ProcData>{
+    pub fn data(&mut self) -> &Vec<ProcData> {
         &self.data
     }
 
-    pub fn update_data(&mut self, data: &Vec<ProcData>) -> (){
+    pub fn update_data(&mut self, data: &Vec<ProcData>) -> () {
         self.data = data.to_vec();
     }
 
-    pub fn sort_data(&mut self) -> (){
-        self.data.sort_by(|a, b|
-            b.round_cpu_usage_percent.partial_cmp(&a.round_cpu_usage_percent).unwrap());
+    pub fn sort_data(&mut self) -> () {
+        self.data.sort_by(|a, b| {
+            b.round_cpu_usage_percent
+                .partial_cmp(&a.round_cpu_usage_percent)
+                .unwrap()
+        });
     }
 
-    pub fn rx_bits(&self) -> &u64{
+    pub fn rx_bits(&self) -> &u64 {
         &self.rx_bits_n
     }
 
-    pub fn update_rx_bits(&mut self, rx_bits: u64)-> (){
+    pub fn update_rx_bits(&mut self, rx_bits: u64) -> () {
         self.rx_bits_n = rx_bits;
     }
 
-    pub fn tx_bits(&self) -> &u64{
+    pub fn tx_bits(&self) -> &u64 {
         &self.tx_bits_n
     }
 
-    pub fn update_tx_bits(&mut self, tx_bits: u64) -> (){
+    pub fn update_tx_bits(&mut self, tx_bits: u64) -> () {
         self.tx_bits_n = tx_bits;
     }
-
 }

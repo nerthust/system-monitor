@@ -1,12 +1,12 @@
 use std::borrow::BorrowMut;
+use std::io;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
-use std::time::{Instant, Duration};
-use std::io;
+use std::time::{Duration, Instant};
 
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent},
-    execute
+    execute,
 };
 
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
@@ -19,7 +19,6 @@ use crate::ui::app::widgets;
 use crate::ui::app::App;
 
 use super::inputs::InputEvent;
-
 
 pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     let mut stdout = io::stdout();
@@ -35,14 +34,14 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     let rxinput = input_thread(Duration::from_millis(1000));
 
     let data = sys_data.read_process_data().unwrap();
-    let mut app = App::new(data, 0,0);
+    let mut app = App::new(data, 0, 0);
 
-    let mut proc_table_state:TableState = TableState::default();
+    let mut proc_table_state: TableState = TableState::default();
     proc_table_state.select(Some(0));
 
     loop {
         //App state
-        let a = app.borrow_mut();                            
+        let a = app.borrow_mut();
         let table_state = proc_table_state.borrow_mut();
 
         //Wait for input
@@ -71,7 +70,6 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                             table_state.select(Some(50 - 1));
                         }
                     }
-
                 }
                 _ => {}
             },
