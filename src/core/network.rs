@@ -1,20 +1,38 @@
 use procfs::net;
 use procfs::net::{dev_status, TcpNetEntry, UdpNetEntry};
 use procfs::process::{FDTarget, Process};
+use std::collections::HashMap;
 
 pub enum NetEntry {
     UDPEntry(UdpNetEntry),
     TCPEntry(TcpNetEntry),
 }
 
-pub fn get_net_entries() -> Vec<NetEntry> {
-    get_tcp_net_entries()
-        .into_iter()
-        .chain(get_udp_net_entries())
-        .collect()
+impl NetEntry {
+    pub fn get_inode(&self) -> u64 {
+        match &self {
+            NetEntry::TCPEntry(entry) => entry.inode,
+            NetEntry::UDPEntry(entry) => entry.inode,
+        }
+    }
 }
 
-pub fn get_net_ports(proc: &Process, net_list: &Vec<NetEntry>) -> (Vec<u16>, Vec<u16>) {
+pub type INode = u64;
+
+pub fn get_net_entry_map() -> HashMap<INode, NetEntry> {
+    let entries = get_tcp_net_entries()
+        .into_iter()
+        .chain(get_udp_net_entries());
+    let mut entry_map = HashMap::new();
+
+    for entry in entries {
+        entry_map.insert(entry.get_inode(), entry);
+    }
+
+    entry_map
+}
+
+pub fn get_net_ports(proc: &Process, entry_map: &HashMap<INode, NetEntry>) -> (Vec<u16>, Vec<u16>) {
     use NetEntry::{TCPEntry, UDPEntry};
 
     let mut tcp_ports = Vec::new();
@@ -22,7 +40,7 @@ pub fn get_net_ports(proc: &Process, net_list: &Vec<NetEntry>) -> (Vec<u16>, Vec
     if let Ok(fds) = proc.fd() {
         for fd in fds {
             if let Ok(FDTarget::Socket(inode)) = fd.map(|v| v.target) {
-                for entry in net_list.iter() {
+                if let Some(entry) = entry_map.get(&inode) {
                     match entry {
                         TCPEntry(entry) => {
                             if entry.inode == inode {
