@@ -33,7 +33,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     //read input thread
     let rxinput = input_thread(Duration::from_millis(1000));
 
-    let data = sys_data.read_process_data().unwrap();
+    let data = sys_data.read_process_data().unwrap().processes;
     let mut app = App::new(data, 0, 0);
 
     let mut proc_table_state: TableState = TableState::default();
@@ -74,10 +74,10 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                 _ => {}
             },
             InputEvent::Tick => {
-                //Update data
-                let new_data = sys_data.read_process_data().unwrap();
+                // Update data
+                let new_data = sys_data.read_process_data().unwrap().processes;
                 a.update_data(&new_data);
-                //Update tx/rx network bits
+                // Update tx/rx network bits
             }
         }
 

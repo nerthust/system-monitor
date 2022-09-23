@@ -1,3 +1,4 @@
+use procfs::process::{self, Process, Stat};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
@@ -17,10 +18,10 @@ pub struct ProcData {
     pub parent_pid: Pid,
 
     // CPU usage as a percentage.
-    pub round_cpu_usage_percent: f64,
+    pub cpu_usage_percent: f64,
 
     // Memory usage as a percentage.
-    pub round_mem_usage_percent: f64,
+    pub mem_usage_percent: f64,
 
     // Total number of bytes read by the process on disk.
     pub total_disk_read_bytes: Option<u64>,
@@ -91,8 +92,8 @@ impl ProcData {
         let data = ProcData {
             pid: proc.pid,
             parent_pid: stat.ppid,
-            round_cpu_usage_percent,
-            round_mem_usage_percent,
+            cpu_usage_percent,
+            mem_usage_percent,
             priority: stat.priority,
             total_disk_read_bytes,
             total_disk_write_bytes,
@@ -122,7 +123,7 @@ pub fn read_process_data(
     let net_map = get_net_entry_map();
 
     if let Ok((cpu_usage, cpu_percentage)) = cpu_usage_calculation(prev_idle, prev_non_idle) {
-        let data = process::all_processes()?
+        let mut data: Vec<ProcData> = process::all_processes()?
             .filter_map(|proc| {
                 if let Ok(proc) = proc {
                     if let Ok(stat) = proc.stat() {
@@ -154,12 +155,13 @@ pub fn read_process_data(
         all_pids.difference(&current_pids).for_each(|k| {
             cpu_times.remove(&k);
         });
-        //Sort process
+
         data.sort_by(|a, b| {
-            b.round_cpu_usage_percent
-                .partial_cmp(&a.round_cpu_usage_percent)
+            b.cpu_usage_percent
+                .partial_cmp(&a.cpu_usage_percent)
                 .unwrap()
         });
+
         Ok(data)
     } else {
         Err(RTopError {

@@ -66,11 +66,11 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static> {
             Cell::from(Span::styled(process.parent_pid.to_string(), help_style)),
             Cell::from(Span::styled(process.priority.to_string(), help_style)),
             Cell::from(Span::styled(
-                process.round_cpu_usage_percent.to_string(),
+                process.cpu_usage_percent.to_string(),
                 key_style,
             )),
             Cell::from(Span::styled(
-                process.round_mem_usage_percent.to_string(),
+                process.mem_usage_percent.to_string(),
                 help_style,
             )),
             Cell::from(Span::styled(
