@@ -157,9 +157,15 @@ pub fn read_process_data(
         });
 
         data.sort_by(|a, b| {
-            b.cpu_usage_percent
-                .partial_cmp(&a.cpu_usage_percent)
-                .unwrap()
+            if b.cpu_usage_percent == a.cpu_usage_percent {
+                b.mem_usage_percent
+                    .partial_cmp(&a.mem_usage_percent)
+                    .unwrap()
+            } else {
+                b.cpu_usage_percent
+                    .partial_cmp(&a.cpu_usage_percent)
+                    .unwrap()
+            }
         });
 
         Ok(data)

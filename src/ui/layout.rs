@@ -33,12 +33,15 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     //read input thread
     let rxinput = input_thread(Duration::from_millis(1000));
 
-    let data = sys_data.read_process_data().unwrap().processes;
-    let mut app = App::new(data, 0, 0);
+    let data = sys_data.read_process_data().unwrap();
+    let rx_n = data.net_received_bytes;
+    let tx_n = data.net_sent_bytes;
+    let mut app = App::new(data.processes, tx_n, rx_n);
 
     let mut proc_table_state: TableState = TableState::default();
     proc_table_state.select(Some(0));
 
+    terminal.draw(|rect| widgets::draw(rect, app.borrow_mut(), proc_table_state.borrow_mut())).unwrap();
     loop {
         //App state
         let a = app.borrow_mut();
@@ -55,7 +58,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                 }
                 KeyCode::Down => {
                     if let Some(selected) = table_state.selected() {
-                        if selected >= 50 {
+                        if selected >= a.data().len() - 1 {
                             table_state.select(Some(0));
                         } else {
                             table_state.select(Some(selected + 1));
@@ -67,7 +70,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
                         if selected > 0 {
                             table_state.select(Some(selected - 1));
                         } else {
-                            table_state.select(Some(50 - 1));
+                            table_state.select(Some(a.data().len() - 1));
                         }
                     }
                 }
@@ -75,9 +78,11 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
             },
             InputEvent::Tick => {
                 // Update data
-                let new_data = sys_data.read_process_data().unwrap().processes;
-                a.update_data(&new_data);
-                // Update tx/rx network bits
+                let data = sys_data.read_process_data().unwrap();
+                a.update_data(&data.processes);
+                // Update tx/rx network bytes
+                a.update_rx_bits(data.net_received_bytes);
+                a.update_tx_bits(data.net_sent_bytes);
             }
         }
 
