@@ -1,4 +1,5 @@
 use procfs::process::{self, Process, Stat};
+use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
@@ -160,11 +161,11 @@ pub fn read_process_data(
             if b.cpu_usage_percent == a.cpu_usage_percent {
                 b.mem_usage_percent
                     .partial_cmp(&a.mem_usage_percent)
-                    .unwrap()
+                    .unwrap_or(Equal)
             } else {
                 b.cpu_usage_percent
                     .partial_cmp(&a.cpu_usage_percent)
-                    .unwrap()
+                    .unwrap_or(Equal)
             }
         });
 

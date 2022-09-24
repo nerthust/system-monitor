@@ -33,7 +33,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     //read input thread
     let rxinput = input_thread(Duration::from_millis(1000));
 
-    let data = sys_data.read_process_data().unwrap();
+    let data = sys_data.read_process_data()?;
     let rx_n = data.net_received_bytes;
     let tx_n = data.net_sent_bytes;
     let mut app = App::new(data.processes, tx_n, rx_n);
@@ -41,7 +41,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     let mut proc_table_state: TableState = TableState::default();
     proc_table_state.select(Some(0));
 
-    terminal.draw(|rect| widgets::draw(rect, app.borrow_mut(), proc_table_state.borrow_mut())).unwrap();
+    terminal.draw(|rect| widgets::draw(rect, app.borrow_mut(), proc_table_state.borrow_mut()))?;
     loop {
         //App state
         let a = app.borrow_mut();
@@ -78,7 +78,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
             },
             InputEvent::Tick => {
                 // Update data
-                let data = sys_data.read_process_data().unwrap();
+                let data = sys_data.read_process_data()?;
                 a.update_data(&data.processes);
                 // Update tx/rx network bytes
                 a.update_rx_bits(data.net_received_bytes);
@@ -106,9 +106,11 @@ pub fn input_thread(tick_rate: Duration) -> Receiver<InputEvent<KeyEvent>> {
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
 
-            if event::poll(timeout).unwrap() {
-                if let Event::Key(key) = event::read().unwrap() {
-                    tx.send(InputEvent::Input(key)).unwrap();
+            if event::poll(timeout).expect("Event poll does not work") {
+                if let Ok(event_read) = event::read() {
+                    if let Event::Key(key) = event_read {
+                        tx.send(InputEvent::Input(key)).expect("Key does not send");
+                    }
                 }
             }
 

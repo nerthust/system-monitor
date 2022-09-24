@@ -63,8 +63,19 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static> {
     let mut rows = vec![];
 
     for process in data.iter() {
-        let total_r_disk_write = process.total_disk_read_bytes.unwrap_or(0) / 1000;
-        let total_w_disk_write = process.total_disk_write_bytes.unwrap_or(0) / 1000;
+        let total_r_disk_write_kb = process.total_disk_read_bytes.unwrap_or(0) / 1000;
+        let total_w_disk_write_kb = process.total_disk_write_bytes.unwrap_or(0) / 1000;
+
+        let tcp_string = match process.tcp_ports.len() {
+            0 => "-------------------------".to_string(),
+            _ => format!("{:?}", process.tcp_ports).replace(&['[', ']'], ""),
+        };
+
+        let udp_string = match process.udp_ports.len() {
+            0 => "-------------------------".to_string(),
+            _ => format!("{:?}", process.udp_ports).replace(&['[', ']'], ""),
+        };
+
         let row = Row::new(vec![
             Cell::from(Span::styled(process.pid.to_string(), blue_style)),
             Cell::from(Span::styled(process.parent_pid.to_string(), white_style)),
@@ -77,19 +88,13 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static> {
                 format!("{:.4}", process.cpu_usage_percent.to_string()),
                 blue_style,
             )),
-            Cell::from(Span::styled(total_r_disk_write.to_string(), white_style)),
-            Cell::from(Span::styled(total_w_disk_write.to_string(), blue_style)),
+            Cell::from(Span::styled(total_r_disk_write_kb.to_string(), white_style)),
+            Cell::from(Span::styled(total_w_disk_write_kb.to_string(), blue_style)),
             Cell::from(Span::styled(process.state.0.clone(), white_style)),
             Cell::from(Span::styled(process.uid.unwrap().to_string(), blue_style)),
             Cell::from(Span::styled(process.name.to_string(), white_style)),
-            Cell::from(Span::styled(
-                "8080, 8080, 8080,  8080, 8080".to_string(),
-                blue_style,
-            )),
-            Cell::from(Span::styled(
-                "244, 8080, 244, 8080, 57".to_string(),
-                white_style,
-            )),
+            Cell::from(Span::styled(tcp_string, blue_style)),
+            Cell::from(Span::styled(udp_string, white_style)),
             Cell::from(Span::styled(process.command.to_string(), blue_style)),
         ]);
         rows.push(row);
