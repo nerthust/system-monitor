@@ -1,29 +1,28 @@
-use std::{thread, time};
+use std::env;
 
 use rtop::core::system_reader::SystemReader;
+use rtop::ui::layout::start_ui;
 
-fn main() {
-    let mut sys_data = SystemReader::new(false);
-    let delay = time::Duration::from_millis(1000);
-
-    loop {
-        let data = sys_data.read_process_data().unwrap();
-        //println!("Network received bytes = {:?}", data.net_received_bytes);
-        //println!("Network sent bytes {:?}", data.net_sent_bytes);
-
-        data.processes.iter().for_each(|proc| {
-            if proc.name.contains("ziru") {
-                for tcp in &proc.tcp_ports {
-                    println!("tcp: {}", tcp);
-                }
-
-                for udp in &proc.udp_ports {
-                    println!("udp: {}", udp);
-                }
-            }
-        });
-
-        thread::sleep(delay);
-        println!("--");
+fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
+    if args.len() == 2 {
+        if args[1].eq("-u") {
+            return Ok(true);
+        } else {
+            return Err("Not a valid argument");
+        }
+    } else if args.len() > 2 {
+        return Err("Too many arguments");
     }
+
+    Ok(false)
+}
+
+fn main() -> Result<(), &'static str> {
+    let args: Vec<String> = env::args().collect();
+    let use_current_cpu_total = check_args(args)?;
+
+    let sys_data = SystemReader::new(use_current_cpu_total);
+    let _ui = start_ui(sys_data);
+
+    Ok(())
 }

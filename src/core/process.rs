@@ -1,4 +1,5 @@
 use procfs::process::{self, Process, Stat};
+use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use sysinfo::ProcessStatus;
@@ -123,7 +124,7 @@ pub fn read_process_data(
     let net_map = get_net_entry_map();
 
     if let Ok((cpu_usage, cpu_percentage)) = cpu_usage_calculation(prev_idle, prev_non_idle) {
-        let data = process::all_processes()?
+        let mut data: Vec<ProcData> = process::all_processes()?
             .filter_map(|proc| {
                 if let Ok(proc) = proc {
                     if let Ok(stat) = proc.stat() {
@@ -154,6 +155,18 @@ pub fn read_process_data(
         let all_pids: HashSet<Pid> = cpu_times.keys().map(|k| *k).collect();
         all_pids.difference(&current_pids).for_each(|k| {
             cpu_times.remove(&k);
+        });
+
+        data.sort_by(|a, b| {
+            if b.cpu_usage_percent == a.cpu_usage_percent {
+                b.mem_usage_percent
+                    .partial_cmp(&a.mem_usage_percent)
+                    .unwrap_or(Equal)
+            } else {
+                b.cpu_usage_percent
+                    .partial_cmp(&a.cpu_usage_percent)
+                    .unwrap_or(Equal)
+            }
         });
 
         Ok(data)
