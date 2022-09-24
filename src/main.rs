@@ -5,10 +5,10 @@ use rtop::ui::layout::start_ui;
 
 fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
     if args.len() == 2 {
-        if args[1].eq("-u") {
+        if args[1].eq("-u") || args[1].eq("--current_usage") {
             return Ok(true);
         } else {
-            return Err("Not a valid argument");
+            return Err("USAGE: rtop [FLAG]?\nFLAG: -u, --current_usage: Sets process CPU% usage to be based on the current system CPU% rather than total CPU usage.");
         }
     } else if args.len() > 2 {
         return Err("Too many arguments");
@@ -19,10 +19,16 @@ fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
 
 fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
-    let use_current_cpu_total = check_args(args)?;
-
-    let sys_data = SystemReader::new(use_current_cpu_total);
-    let _ui = start_ui(sys_data);
+    match check_args(args) {
+        Ok(use_current_cpu_total) => {
+            let sys_data = SystemReader::new(use_current_cpu_total);
+            start_ui(sys_data).unwrap();
+        }
+        Err(msg) => {
+            println!("{}", msg);
+            std::process::exit(1);
+        }
+    }
 
     Ok(())
 }
