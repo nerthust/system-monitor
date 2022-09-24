@@ -5,7 +5,7 @@ use rtop::ui::layout::start_ui;
 
 fn check_args(args: Vec<String>) -> Result<bool, &'static str> {
     if args.len() == 2 {
-        if args[1].eq("u") {
+        if args[1].eq("-u") {
             return Ok(true);
         } else {
             return Err("Not a valid argument");

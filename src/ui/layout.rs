@@ -31,7 +31,7 @@ pub fn start_ui(mut sys_data: SystemReader) -> Result<(), RTopError> {
     terminal.hide_cursor()?;
 
     //read input thread
-    let rxinput = input_thread(Duration::from_millis(1000));
+    let rxinput = input_thread(Duration::from_millis(1500));
 
     let data = sys_data.read_process_data()?;
     let rx_n = data.net_received_bytes;

@@ -116,17 +116,17 @@ fn draw_process(data: Vec<ProcData>) -> Table<'static> {
         .header(
             Row::new(vec![
                 "PID",
-                "PA_ID",
+                "PAID",
                 "PRI",
-                "%MEM",
-                "%CPU",
+                "MEM%",
+                "CPU%",
                 "READ(KB)",
                 "WRITE(KB)",
                 "STATE",
                 "UID",
                 "NAME",
-                "TCP_Ports",
-                "UDP_Ports",
+                "TCP_PORTS",
+                "UDP_PORTS",
                 "COMMAND",
             ])
             .style(Style::default().fg(Color::LightGreen))
